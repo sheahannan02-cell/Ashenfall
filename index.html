@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0d1015">
+<title>Ashenfall Stable Integrated 0.2.3</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#0b0e13;color:#f2f3f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;touch-action:none}
+button{font:inherit;color:inherit}.hidden{display:none!important}
+#app{height:100%;display:flex;flex-direction:column}.top{height:78px;padding:8px 10px;background:#12161d;border-bottom:1px solid #303641;display:flex;gap:10px;align-items:center}
+.brand{width:125px}.brand b{letter-spacing:.14em}.brand small{display:block;color:#98a2b3;font-size:10px;margin-top:2px}
+.hud{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:7px}.meter{font-size:10px;color:#aeb6c4}.bar{height:9px;background:#272d37;border-radius:20px;overflow:hidden;margin-top:3px}.fill{height:100%}.hp{background:#c63246}.xp{background:#4e83de}
+.stats{font-size:10px;line-height:1.45;white-space:nowrap}
+#wrap{position:relative;flex:1;min-height:0}canvas{width:100%;height:100%;display:block;background:#10151a}
+.card{background:rgba(13,16,21,.9);border:1px solid #39414d;border-radius:11px;padding:8px 10px}
+#objective{position:absolute;left:8px;top:8px;font-size:10px;pointer-events:none}#objective b{color:#e9c567}
+#toast{position:absolute;top:12px;left:50%;transform:translateX(-50%);opacity:0;transition:.2s;background:rgba(10,12,16,.94);border:1px solid #4a5360;padding:8px 12px;border-radius:999px;font-size:12px;pointer-events:none;white-space:nowrap;max-width:84vw;overflow:hidden;text-overflow:ellipsis}
+.bottom{position:absolute;left:50%;bottom:max(7px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:6px;z-index:2}.bottom button{background:#191e26;border:1px solid #596271;border-radius:8px;padding:7px 9px;font-size:11px}
+.joy{position:absolute;left:max(16px,env(safe-area-inset-left));bottom:74px;width:118px;height:118px;border:2px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);border-radius:50%}.stick{position:absolute;width:52px;height:52px;left:31px;top:31px;border-radius:50%;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25)}
+.actions{position:absolute;right:max(12px,env(safe-area-inset-right));bottom:65px;width:214px;height:184px}.act{position:absolute;border-radius:50%;border:1px solid #5a6574;background:rgba(29,34,43,.92);box-shadow:0 6px 18px rgba(0,0,0,.25)}.basic{width:78px;height:78px;right:0;bottom:0;font-size:28px;background:#642933}.skill{width:58px;height:58px;font-size:11px}.s1{right:83px;bottom:67px}.s2{right:8px;bottom:88px}.s3{right:92px;bottom:2px}.dash{right:145px;bottom:58px}.ult{right:88px;bottom:122px;background:#6c5120}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.76);display:flex;align-items:center;justify-content:center;padding:12px}.panel{width:min(980px,97vw);max-height:92vh;overflow:auto;background:linear-gradient(#1a1f28,#10141a);border:1px solid #424a57;border-radius:15px;padding:14px}.head{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #303742;padding-bottom:9px;margin-bottom:11px}.head h2{margin:0;font-size:20px}.head p{margin:3px 0 0;color:#9fa8b6;font-size:12px}.close{border:0;background:transparent;font-size:28px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.slot,.item,.class,.ability,.node{background:#181d24;border:1px solid #353d48;border-radius:10px;padding:9px}.slot small,.item small,.class small,.ability small,.node small{display:block;color:#a5afbd;margin-top:4px;line-height:1.3}.item{cursor:pointer}.item .name{font-weight:800}.common{color:#d9dde4}.magic{color:#7fb6ff}.rare{color:#ffd560}.legendary{color:#ff9d4c}.unique{color:#d083ff}.set{color:#55e38d}.mythic{color:#ff5d76}
+.setbox{padding:9px;border:1px solid #6b5d38;background:#272215;border-radius:9px;color:#f1dfa1;font-size:12px;margin:8px 0}
+.skilltree{position:relative;min-width:900px;height:520px;background:radial-gradient(circle at 50% 50%,#232a35,#151a21 52%,#0f1217);border:1px solid #353d48;border-radius:12px}.node{position:absolute;width:132px;min-height:72px;text-align:center;font-size:11px;cursor:pointer}.node.active{border-color:#d9b65b;background:#2a2417}.node.locked{opacity:.38;cursor:not-allowed}
+.abilityrow{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.ability.selected{border-color:#d0a84c;background:#282216}
+.pill{display:inline-block;border:1px solid #48515e;border-radius:999px;padding:2px 6px;font-size:10px;color:#bbc3ce;margin:2px}
+#classModal .panel{max-width:820px}.class{cursor:pointer;min-height:130px}.class h3{margin:0 0 5px}.class .weaps{color:#e3c77a;font-size:11px;margin-top:8px}
+.sep{border-top:1px solid #303742;margin:12px 0}.help p{font-size:12px;line-height:1.5;color:#d5dae1}
+@media(max-width:720px){.brand{width:88px}.brand b{font-size:11px}.brand small{display:none}.stats{font-size:9px}.top{height:68px}.grid3{grid-template-columns:1fr 1fr}.grid2,.abilityrow{grid-template-columns:1fr}.actions{transform:scale(.9);transform-origin:bottom right}.joy{transform:scale(.9);transform-origin:bottom left}}
+
+.selectClassBtn{
+  width:100%; min-height:48px; margin-top:10px;
+  border:1px solid #a84a55; border-radius:9px;
+  background:#74323b; color:#fff; font-weight:800;
+  touch-action:manipulation;
+}
+@media(max-width:720px){.selectClassBtn{min-height:54px;font-size:15px}}
+
+
+/* Stable Integrated 0.2.3 additions */
+#zoneStatus{position:absolute;right:8px;top:8px;font-size:10px;pointer-events:none}
+#zoneStatus b{color:#72dfaa}.gearTools{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
+.gearTools button{background:#17202a;border:1px solid #435166;border-radius:8px;padding:8px 10px}
+#gearCompare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.compareCard{background:#141a22;border:1px solid #384554;border-radius:10px;padding:10px}
+.good{color:#65dc8a}.bad{color:#ff7885}.item.upgrade{border-color:#638b66}
+.item .delta{display:inline-block;margin-top:5px;padding:2px 6px;border-radius:999px;background:#10161d;border:1px solid #303b48;font-size:9px}
+.skilltree.expanded{min-width:1500px;height:900px}
+.node .nodeCost{display:inline-block;margin-top:5px;padding:2px 6px;border-radius:999px;background:#0e1318;border:1px solid #424d59;color:#e6c873;font-size:9px}
+.node.capstone{border-color:#8a6731}.node.apex{border-color:#c88b37;background:#33240f;box-shadow:0 0 20px rgba(219,157,56,.18)}
+.node.invested{border-color:#a98743;background:#272116}
+.act.cooling{filter:saturate(.55);box-shadow:inset 0 0 0 2px rgba(0,0,0,.35)}
+.act.ready{box-shadow:0 0 0 2px rgba(104,220,149,.32)}
+@media(max-width:720px){#gearCompare{grid-template-columns:1fr}.skilltree.expanded{min-width:1500px;height:900px}}
+
+button,.act,.class,.item,.slot{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="brand"><b>ASHENFALL</b><small>Stable Integrated 0.2.3</small></div>
+    <div class="hud">
+      <div class="meter">HP<div class="bar"><div id="hpBar" class="fill hp"></div></div></div>
+      <div class="meter">XP<div class="bar"><div id="xpBar" class="fill xp"></div></div></div>
+    </div>
+    <div class="stats">Lv <b id="lvl">1</b><br>Power <b id="pow">10</b><br>Tier <b id="tier">I</b></div>
+  </div>
+  <div id="wrap">
+    <canvas id="game"></canvas>
+    <div id="objective" class="card"><b>Hunt</b><br><span id="obj">0 / 20</span><br><span id="className">Unchosen</span></div>
+    <div id="toast"></div><div id="zoneStatus" class="card"><b>SANCTUARY</b><br><span id="zoneText">Safe • healing</span></div>
+    <div class="joy" id="joy"><div class="stick" id="stick"></div></div>
+    <div class="actions">
+      <button id="basic" class="act basic">⚔</button>
+      <button id="skill1" class="act skill s1">Skill 1</button>
+      <button id="skill2" class="act skill s2">Skill 2</button>
+      <button id="skill3" class="act skill s3">Skill 3</button>
+      <button id="dash" class="act skill dash">Dash</button>
+      <button id="ult" class="act skill ult">ULT</button>
+    </div>
+    <div class="bottom">
+      <button id="gearBtn">Gear</button><button id="abilityBtn">Abilities</button><button id="treeBtn">Passive Web</button><button id="helpBtn">Help</button>
+    </div>
+  </div>
+</div>
+
+<div id="classModal" class="modal">
+ <div class="panel">
+  <div class="head"><div><h2>Choose your class</h2><p>Weapons and starting abilities are class-specific. The passive web is shared.</p></div></div>
+  <div id="classGrid" class="grid2">
+  <div class="class">
+    <h3>🪓 Berserker</h3>
+    <small>Rage-fuelled melee catastrophe. Cleaves packs apart and turns damage taken into momentum.</small>
+    <div class="weaps">Weapons: Greatsword • Greataxe • Dual Axes</div>
+    <small>Core skill: Whirlwind</small>
+    <button type="button" class="selectClassBtn" data-class="Berserker">SELECT BERSERKER</button>
+  </div>
+  <div class="class">
+    <h3>🏹 Ranger</h3>
+    <small>Hyper-mobile hunter built around crits, projectiles, poison and traps.</small>
+    <div class="weaps">Weapons: Longbow • Crossbow • Twin Daggers</div>
+    <small>Core skill: Multishot</small>
+    <button type="button" class="selectClassBtn" data-class="Ranger">SELECT RANGER</button>
+  </div>
+  <div class="class">
+    <h3>🔥 Arcanist</h3>
+    <small>Elemental destroyer whose gear can turn single spells into entire builds.</small>
+    <div class="weaps">Weapons: Staff • Wand • Spellblade</div>
+    <small>Core skill: Meteor</small>
+    <button type="button" class="selectClassBtn" data-class="Arcanist">SELECT ARCANIST</button>
+  </div>
+  <div class="class">
+    <h3>💀 Necromancer</h3>
+    <small>Corpse, curse and minion specialist. Kills create more tools for the next kill.</small>
+    <div class="weaps">Weapons: Scythe • Bone Staff • Ritual Dagger</div>
+    <small>Core skill: Bone Spear</small>
+    <button type="button" class="selectClassBtn" data-class="Necromancer">SELECT NECROMANCER</button>
+  </div>
+</div>
+ </div>
+</div>
+
+<div id="gearModal" class="modal hidden"><div class="panel">
+ <div class="head"><div><h2>Gear & Builds</h2><p>Ability-defining items are designed to overpower one skill rather than force a 6-piece set.</p></div><button class="close" data-close="gearModal">×</button></div>
+ <div id="gearSlots" class="grid3"></div>
+ <div id="setBonus" class="setbox"></div><div class="setbox" style="margin-top:6px"><b>Loot scaling:</b> item power now rises with level and World Tier.</div><div class="gearTools"><button id="equipBest">⚡ Equip Best</button></div><div id="gearCompare" class="hidden"></div>
+ <div class="sep"></div><div id="inventory" class="grid2"></div>
+</div></div>
+
+<div id="abilityModal" class="modal hidden"><div class="panel">
+ <div class="head"><div><h2>Ability Evolution</h2><p>Use abilities to level them. Every 3 ability levels grants an evolution point.</p></div><button class="close" data-close="abilityModal">×</button></div>
+ <div id="abilities" class="abilityrow"></div>
+ <div class="sep"></div><div id="abilityTreeWrap" style="overflow:auto"><div id="abilityTree" class="skilltree"></div></div>
+</div></div>
+
+<div id="treeModal" class="modal hidden"><div class="panel">
+ <div class="head"><div><h2>The Great Web</h2><p>Shared passive tree. Points are earned from character levels and hunt milestones.</p></div><button class="close" data-close="treeModal">×</button></div>
+ <p style="font-size:12px">Available points: <b id="passivePts">0</b></p>
+ <div style="overflow:auto"><div id="passiveTree" class="skilltree expanded"></div></div>
+</div></div>
+
+<div id="helpModal" class="modal hidden"><div class="panel help">
+ <div class="head"><div><h2>How this version works</h2><p>Ashenfall v0.2</p></div><button class="close" data-close="helpModal">×</button></div>
+ <p><b>Move:</b> left joystick. <b>Basic attack:</b> sword button. <b>Skills:</b> the three small ability buttons. Dash and Ultimate sit around them.</p>
+ <p>Enemies continuously scale in health, damage and density. Completing each 20-kill Hunt increases World Tier and improves loot quality.</p>
+ <p>Weapons are locked to your class. Legendary and Unique items can massively alter a specific ability. Sets are deliberately short, usually 2-3 pieces, so you can mix them with ability-defining gear.</p>
+ <p>The Ability Evolution screen lets you spend points on the selected skill. The Great Web is shared across all classes.</p>
+</div></div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id), canvas=$('game'),ctx=canvas.getContext('2d');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>Math.random()*(b-a)+a,dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function resize(){let r=canvas.getBoundingClientRect();canvas.width=Math.max(640,r.width*devicePixelRatio);canvas.height=Math.max(360,r.height*devicePixelRatio)}addEventListener('resize',resize);resize();
+const classes={
+ Berserker:{icon:'🪓',weapons:['Greatsword','Greataxe','Dual Axes'],color:'#d85a4f',desc:'Rage-fuelled melee catastrophe. Cleaves packs apart and turns damage taken into momentum.',
+  abilities:[
+   {id:'whirlwind',name:'Whirlwind',cd:.9,base:32,range:145,type:'aoe'},
+   {id:'slam',name:'Earthshatter',cd:3.2,base:80,range:190,type:'aoe'},
+   {id:'chains',name:'Blood Chains',cd:5.2,base:52,range:250,type:'line'},
+   {id:'wrath',name:'Wrath Unbound',cd:13,base:120,range:230,type:'aoe'}]},
+ Ranger:{icon:'🏹',weapons:['Longbow','Crossbow','Twin Daggers'],color:'#68b879',desc:'Hyper-mobile hunter built around crits, projectiles, poison and traps.',
+  abilities:[
+   {id:'multishot',name:'Multishot',cd:1.1,base:30,range:330,type:'cone'},
+   {id:'trap',name:'Venom Trap',cd:3.5,base:70,range:210,type:'aoe'},
+   {id:'dashshot',name:'Dashshot',cd:4.3,base:58,range:300,type:'line'},
+   {id:'arrowstorm',name:'Arrowstorm',cd:13,base:125,range:300,type:'aoe'}]},
+ Arcanist:{icon:'☄️',weapons:['Staff','Wand','Spellblade'],color:'#7b8ff1',desc:'Elemental destroyer whose gear can turn single spells into entire builds.',
+  abilities:[
+   {id:'meteor',name:'Meteor',cd:3.4,base:92,range:260,type:'aoe'},
+   {id:'frostnova',name:'Frost Nova',cd:4.2,base:54,range:185,type:'aoe'},
+   {id:'chainlightning',name:'Chain Lightning',cd:2.1,base:48,range:320,type:'chain'},
+   {id:'cataclysm',name:'Cataclysm',cd:14,base:145,range:330,type:'aoe'}]},
+ Necromancer:{icon:'💀',weapons:['Scythe','Bone Staff','Ritual Dagger'],color:'#a17ac2',desc:'Corpse, curse and minion specialist. Kills create more tools for the next kill.',
+  abilities:[
+   {id:'bonespear',name:'Bone Spear',cd:1.35,base:44,range:340,type:'line'},
+   {id:'corpseburst',name:'Corpse Burst',cd:3.1,base:78,range:210,type:'aoe'},
+   {id:'curse',name:'Grave Curse',cd:5,base:45,range:260,type:'aoe'},
+   {id:'army',name:'Army of Ash',cd:14,base:138,range:300,type:'aoe'}]}
+};
+const abilityGear={
+ whirlwind:[
+  ['Tempest Grips','legendary','Whirlwind radius +90%.', {radius:1.9}],
+  ['Bloodspun Gauntlets','unique','Whirlwind deals +350% damage.', {mult:4.5}],
+  ['Crown of Endless Motion','mythic','Whirlwind cooldown removed; damage +175%.',{mult:2.75,cd:0.12}]
+ ],
+ meteor:[
+  ['Starfall Crown','unique','Meteor calls down 3 impacts. Total damage +240%.',{mult:3.4}],
+  ['Gloves of the Dying Sun','legendary','Meteor damage +500%.',{mult:6}],
+  ["Astronomer's Folly",'mythic','Meteor gains Armageddon and Starfall simultaneously. Damage +900%.',{mult:10}]
+ ],
+ multishot:[
+  ['Hawkeye Mantle','legendary','Multishot fires a second volley. Damage +220%.',{mult:3.2}],
+  ['Thousand Thorn Quiver','unique','Multishot becomes a 360° burst. Damage +420%.',{mult:5.2}],
+  ['Last Horizon','mythic','Multishot projectiles ricochet endlessly in the pack. Damage +850%.',{mult:9.5}]
+ ],
+ bonespear:[
+  ['Marrow Crown','legendary','Bone Spear pierces and splinters. Damage +260%.',{mult:3.6}],
+  ['Spine of the First King','unique','Bone Spear launches 3 spears. Damage +500%.',{mult:6}],
+  ['Ossuary','mythic','Bone Spear erupts from every slain enemy. Damage +1000%.',{mult:11}]
+ ]
+};
+const sets={
+ Berserker:{name:'Worldbreaker',pieces:['helm','chest','boots'],two:'2pc: Slam radius +50%.',three:'3pc: Whirlwind +150% damage.'},
+ Ranger:{name:'Nightstalker',pieces:['helm','chest','boots'],two:'2pc: +20% crit chance.',three:'3pc: Multishot +150% damage.'},
+ Arcanist:{name:'Fallen Star',pieces:['helm','chest','boots'],two:'2pc: Meteor cooldown -30%.',three:'3pc: Meteor +180% damage.'},
+ Necromancer:{name:'Bone Regent',pieces:['helm','chest','boots'],two:'2pc: Corpse Burst radius +50%.',three:'3pc: Bone Spear +180% damage.'}
+};
+const rarityOrder=['common','magic','rare','legendary','unique','set','mythic'];
+const rarityMult={common:1,magic:1.25,rare:1.55,legendary:1.9,unique:2.2,set:2,mythic:2.7};
+const gearSlots=['weapon','helm','chest','gloves','boots','amulet','ring1','ring2'];
+const names={helm:['Iron Visage','Ash Hood','Dread Crown'],chest:['Blackplate','Grave Mail','Cinder Coat'],gloves:['War Grips','Hexwraps','Hunter Gloves'],boots:['Night Treads','Ashwalkers','Iron March'],amulet:['Hollow Star','Ember Chain','Grave Locket'],ring1:['Iron Signet','Blood Band','Cinder Ring'],ring2:['Night Signet','Bone Band','Storm Ring']};
+
+const P={x:1200,y:800,r:18,class:null,hp:120,maxHp:120,level:1,xp:0,xpNeed:100,passivePts:0,kills:0,huntKills:0,tier:1,gold:0,baseDamage:14,damage:14,crit:.05,speed:245,gear:{},inventory:[],nodes:new Set(),selectedAbility:null,abilityState:{},cooldowns:{},dashCd:0};
+const world={w:2400,h:1600}; let enemies=[],drops=[],fx=[],joy={dx:0,dy:0,id:null,active:false};
+P.speed=155;
+const sanctuary={x:1200,y:800,r:275};
+const hunt={active:false,spawnClock:0,bossProgress:0,bossAlive:false,maxEnemies:50};
+const webRanks={};
+
+
+function toast(t){$('toast').textContent=t;$('toast').style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').style.opacity=0,1500)}
+function chooseClass(name){
+ P.class=name;const C=classes[name];P.selectedAbility=C.abilities[0].id;
+ C.abilities.forEach(a=>P.abilityState[a.id]={level:1,xp:0,xpNeed:40,points:0,nodes:new Set()});
+ P.inventory.push(makeWeapon(name,'rare'),makeItem('helm','magic'),makeItem('chest','rare'));
+ P.gear.weapon=P.inventory[0];P.gear.helm=P.inventory[1];P.gear.chest=P.inventory[2];
+ $('classModal').classList.add('hidden');$('className').textContent=C.icon+' '+name;
+ refreshButtons();recalc();renderGear();spawnWave(12);toast(name+' awakened');
+}
+
+function currentLootPowerBase(){
+ let tierScale=Math.pow(1.24,Math.max(0,P.tier-1));
+ let levelScale=1+Math.max(0,P.level-1)*.115;
+ return (18+P.level*5.5)*tierScale*levelScale;
+}
+function rarityPowerMultiplier(r){
+ return {common:.92,magic:1.06,rare:1.22,legendary:1.48,unique:1.72,set:1.82,mythic:2.15}[r]||1;
+}
+function makeWeapon(cls,rar='common'){
+ const w=classes[cls].weapons[Math.floor(rand(0,classes[cls].weapons.length))];
+ return {id:Math.random(),slot:'weapon',rar,name:w+' of Ash',power:Math.round((8+P.level*2)*rarityMult[rar]),classLock:cls};
+}
+function makeItem(slot,rar='common'){
+ let base=currentLootPowerBase()*rarityPowerMultiplier(rar);
+ let slotMult=slot==='weapon'?1.22:slot==='chest'?1.08:slot==='helm'?1.04:1;
+ let power=Math.max(4,Math.round(base*slotMult*rand(.90,1.12)));
+ let floor=Math.round((15+P.tier*10+P.level*3.2)*(slot==='weapon'?1.22:1));
+ power=Math.max(power,floor);
+
+ let names={
+  common:['Worn','Ashen','Weathered'],
+  magic:['Runed','Savage','Vicious'],
+  rare:['Bloodforged','Emberbound','Grim'],
+  legendary:['Doomcarved','Worldsplitter','Hellmarked'],
+  unique:['Relic','Anathema','Godscar'],
+  set:['Oathbound','Warborn','Worldbreaker'],
+  mythic:['Apex','Cataclysm','Eternal']
+ }[rar];
+ let noun={weapon:'Weapon',helm:'Helm',chest:'Chestguard',gloves:'Gauntlets',boots:'Greaves',ring:'Ring',amulet:'Amulet'}[slot];
+ let item={id:Math.random().toString(36).slice(2),slot,rar,power,name:names[Math.floor(rand(0,names.length))]+' '+noun};
+ item.stats={
+   damage:slot==='weapon'?Math.round(power*.72):Math.round(power*.08),
+   armor:slot==='weapon'?0:Math.round(power*.58),
+   crit:rarityOrder.indexOf(rar)>=rarityOrder.indexOf('rare')?Math.min(.08,power/5000):0
+ };
+ if(rarityOrder.indexOf(rar)>=rarityOrder.indexOf('legendary')){
+   item.desc=`Scaled for World Tier ${P.tier}. ${slot==='weapon'?`+${item.stats.damage} damage`:`+${item.stats.armor} armour`}`;
+ }
+ return item;
+}
+function specialDrop(){
+ const C=P.class, main=classes[C].abilities[0].id;
+ if(Math.random()<.28 && abilityGear[main]){
+   const g=abilityGear[main][Math.floor(rand(0,abilityGear[main].length))];
+   const slot=Math.random()<.5?'gloves':'amulet';
+   return {id:Math.random(),slot,rar:g[1],name:g[0],power:Math.round((6+P.level*2)*rarityMult[g[1]]),ability:main,effect:g[3],desc:g[2]};
+ }
+ const S=sets[C];let slot=S.pieces[Math.floor(rand(0,S.pieces.length))];
+ return {id:Math.random(),slot,rar:'set',name:S.name+' '+slot[0].toUpperCase()+slot.slice(1),power:Math.round((6+P.level*1.8)*2),set:S.name};
+}
+function rollRarity(){
+ const bonus=Math.min(.18,(P.tier-1)*.012),r=Math.random();
+ if(r<.006+bonus*.08)return'mythic';
+ if(r<.025+bonus*.18)return'unique';
+ if(r<.08+bonus*.35)return'legendary';
+ if(r<.18+bonus*.55)return'rare';
+ if(r<.45)return'magic'; return'common';
+}
+const enemyArchetypes={
+ fodder:{name:'Ashling',weight:50,hp:.75,speed:48,dmg:.70,r:14,range:28,windup:.35,recovery:.95,color:'#7e3038'},
+ skirmisher:{name:'Ravager',weight:28,hp:.95,speed:58,dmg:.85,r:15,range:31,windup:.48,recovery:1.10,color:'#75404c'},
+ bruiser:{name:'Dread Mauler',weight:16,hp:2.15,speed:28,dmg:2.0,r:21,range:39,windup:1.05,recovery:1.70,color:'#8b592f'},
+ executioner:{name:'Ash Executioner',weight:6,hp:3.1,speed:21,dmg:2.75,r:24,range:45,windup:1.45,recovery:2.10,color:'#97472d'}
+};
+function chooseEnemyType(){let roll=Math.random()*100,total=0;for(let [key,t] of Object.entries(enemyArchetypes)){total+=t.weight;if(roll<=total)return[key,t]}return['fodder',enemyArchetypes.fodder]}
+function spawnEnemy(forceType=null,boss=false){
+ if(enemies.length>=hunt.maxEnemies)return;
+ let pair=forceType?[forceType,enemyArchetypes[forceType]]:chooseEnemyType(),type=pair[0],T=pair[1],a=rand(0,Math.PI*2),d=rand(430,720),x,y,tries=0;
+ do{x=clamp(P.x+Math.cos(a)*d,30,world.w-30);y=clamp(P.y+Math.sin(a)*d,30,world.h-30);a=rand(0,Math.PI*2);d=rand(430,720);tries++}while(Math.hypot(x-sanctuary.x,y-sanctuary.y)<sanctuary.r+90&&tries<12);
+ let base=(32+P.level*6.4)*Math.pow(1.10,P.tier-1)*rand(.88,1.14),elite=!boss&&Math.random()<Math.min(.18,.035+P.tier*.01);
+ let e={x,y,type,name:T.name,r:T.r,hp:base*T.hp,maxHp:1,speed:T.speed+Math.min(9,P.tier*.45),dmg:(5+P.tier*1.35)*T.dmg,hit:0,elite,range:T.range,windup:T.windup,recovery:T.recovery,telegraph:0,telegraphMax:T.windup,color:T.color,boss};
+ if(elite){e.hp*=2.6;e.dmg*=1.35;e.r+=3;e.name='Elite '+e.name}
+ if(boss){e.name='BOSS • Cinder Warden';e.hp*=4.3;e.dmg*=1.45;e.r=31;e.speed=18;e.range=55;e.windup=1.75;e.telegraphMax=e.windup;hunt.bossAlive=true}
+ e.maxHp=e.hp;enemies.push(e)
+}
+function spawnWave(n){for(let i=0;i<n;i++)spawnEnemy()}
+function updateHuntSpawner(dt){
+ if(!hunt.active)return;hunt.spawnClock-=dt;
+ let desired=Math.min(hunt.maxEnemies,14+P.tier*3+Math.floor(P.level*.6));
+ if(hunt.spawnClock<=0&&enemies.length<desired){let burst=Math.min(desired-enemies.length,Math.random()<.22?Math.floor(rand(3,7)):Math.floor(rand(1,4)));for(let i=0;i<burst;i++)spawnEnemy();hunt.spawnClock=rand(.12,.52)}
+ if(!hunt.bossAlive&&hunt.bossProgress>=30){spawnEnemy('executioner',true);hunt.bossProgress=0;toast('A Cinder Warden has entered the hunt')}
+}
+function getSetCount(){let S=sets[P.class]?.name;return Object.values(P.gear).filter(i=>i?.set===S).length}
+function abilityMods(id){
+ let mult=1,radius=1,cd=1;
+ for(let item of Object.values(P.gear)){if(item?.ability===id&&item.effect){mult*=item.effect.mult||1;radius*=item.effect.radius||1;if(item.effect.cd)cd*=item.effect.cd}}
+ const sc=getSetCount();
+ if(P.class==='Berserker'&&id==='whirlwind'&&sc>=3)mult*=2.5;
+ if(P.class==='Ranger'&&id==='multishot'&&sc>=3)mult*=2.5;
+ if(P.class==='Arcanist'&&id==='meteor'&&sc>=3)mult*=2.8;
+ if(P.class==='Necromancer'&&id==='bonespear'&&sc>=3)mult*=2.8;
+ if(P.class==='Arcanist'&&id==='meteor'&&sc>=2)cd*=.7;
+ const st=P.abilityState[id]; if(st){
+   if(st.nodes.has('power'))mult*=1.55;
+   if(st.nodes.has('cataclysm'))mult*=3.5;
+   if(st.nodes.has('wide'))radius*=1.5;
+   if(st.nodes.has('rapid'))cd*=.72;
+ }
+ return{mult,radius,cd}
+}
+function recalc(){
+ let dmg=P.baseDamage,hp=P.maxHp;
+ Object.values(P.gear).forEach(i=>{if(!i)return;if(i.slot==='weapon')dmg+=i.power;else hp+=i.power*1.8});
+ if(P.nodes.has('brutality'))dmg*=1.2;if(P.nodes.has('giant'))hp*=1.22;if(P.nodes.has('predator'))P.crit=Math.max(P.crit,.13);
+ P.damage=dmg;P.effectiveMaxHp=hp;if(P.hp>hp)P.hp=hp;
+}
+function attack(){
+ let target=null,best=180;for(let e of enemies){let d=dist(P,e);if(d<best){best=d;target=e}}
+ if(target)damageEnemy(target,P.damage*(Math.random()<P.crit?1.8:1));fx.push({x:P.x,y:P.y,t:.16,r:70});
+}
+function cast(index){
+ if(!P.class)return;let a=classes[P.class].abilities[index];if(!a)return;
+ let mod=abilityMods(a.id),cd=a.cd*mod.cd;if((P.cooldowns[a.id]||0)>0)return;P.cooldowns[a.id]=cd;
+ let radius=a.range*mod.radius, dmg=(a.base+P.damage*1.4)*mod.mult;
+ let hit=0;
+ enemies.slice().forEach(e=>{let d=dist(P,e);if(d<=radius){damageEnemy(e,dmg*rand(.88,1.12));hit++}});
+ if(hit===0){let nearest=enemies.slice().sort((a,b)=>dist(P,a)-dist(P,b))[0];if(nearest&&dist(P,nearest)<a.range*1.35)damageEnemy(nearest,dmg)}
+ fx.push({x:P.x,y:P.y,t:.35,r:radius});
+ abilityXP(a.id,5+hit*2);
+}
+function abilityXP(id,x){
+ let s=P.abilityState[id];if(!s)return;s.xp+=x;
+ while(s.xp>=s.xpNeed){s.xp-=s.xpNeed;s.level++;s.xpNeed=Math.floor(s.xpNeed*1.22);if(s.level%3===0){s.points++;toast(classes[P.class].abilities.find(a=>a.id===id).name+' evolution point!')}}
+}
+function damageEnemy(e,dmg){e.hp-=dmg;fx.push({x:e.x,y:e.y,t:.14,r:22});if(e.hp<=0)kill(e)}
+function kill(e){
+ let idx=enemies.indexOf(e);if(idx>=0)enemies.splice(idx,1);P.kills++;P.huntKills++;hunt.bossProgress++;P.gold+=Math.round(rand(2,8));gainXP(18+P.tier*2);
+ if(Math.random()<.50){
+   let item;if(Math.random()<Math.min(.22,.05+P.tier*.01))item=specialDrop();else item=makeItem(gearSlots[Math.floor(rand(0,gearSlots.length))],rollRarity());
+   drops.push({x:e.x,y:e.y,item,t:0});
+ }
+ if(P.huntKills>=20){P.huntKills=0;P.tier++;P.passivePts+=5;toast('World Tier '+P.tier+' unlocked! • +5 Web points')}
+
+ if(e.boss){hunt.bossAlive=false;P.passivePts+=10;toast('Boss defeated • +10 Web points')}
+}
+function gainXP(x){P.xp+=x;while(P.xp>=P.xpNeed){P.xp-=P.xpNeed;P.level++;P.passivePts+=5;P.xpNeed=Math.floor(P.xpNeed*1.25);P.maxHp+=8;P.hp=P.maxHp;toast('Level '+P.level+' • +5 Great Web points')}}
+function dash(){if(P.dashCd>0)return;P.dashCd=2.4;let m=getMove(),l=Math.hypot(m.x,m.y)||1;if(l<.2){m={x:1,y:0};l=1}P.x=clamp(P.x+m.x/l*150,30,world.w-30);P.y=clamp(P.y+m.y/l*150,30,world.h-30)}
+function getMove(){return{x:joy.dx,y:joy.dy}}
+
+const joyEl=$('joy'),stick=$('stick');
+function joyPos(x,y){let r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=x-cx,dy=y-cy,m=Math.hypot(dx,dy),mx=39;if(m>mx){dx=dx/m*mx;dy=dy/m*mx}joy.dx=dx/mx;joy.dy=dy/mx;stick.style.transform=`translate(${dx}px,${dy}px)`}
+joyEl.onpointerdown=e=>{joy.active=true;joy.id=e.pointerId;joyEl.setPointerCapture(e.pointerId);joyPos(e.clientX,e.clientY)};joyEl.onpointermove=e=>{if(joy.active&&e.pointerId===joy.id)joyPos(e.clientX,e.clientY)};function endJoy(e){if(e.pointerId===joy.id){joy.active=false;joy.dx=joy.dy=0;stick.style.transform='translate(0,0)'}}joyEl.onpointerup=endJoy;joyEl.onpointercancel=endJoy;
+
+function refreshButtons(){if(!P.class)return;let A=classes[P.class].abilities;$('skill1').textContent=A[0].name;$('skill2').textContent=A[1].name;$('skill3').textContent=A[2].name;$('ult').textContent=A[3].name}
+$('basic').onpointerdown=attack;$('skill1').onpointerdown=()=>cast(0);$('skill2').onpointerdown=()=>cast(1);$('skill3').onpointerdown=()=>cast(2);$('ult').onpointerdown=()=>cast(3);$('dash').onpointerdown=dash;
+
+function equip(item){if(item.classLock&&item.classLock!==P.class){toast('Wrong class');return}P.gear[item.slot]=item;recalc();renderGear();toast(item.name+' equipped')}
+function itemScore(i){if(!i)return 0;return (i.power||0)+(i.stats?.damage||0)*2.4+(i.stats?.armor||0)*.65+(i.stats?.crit||0)*800}
+function showGearCompare(item){
+ let cur=P.gear[item.slot],delta=Math.round(itemScore(item)-itemScore(cur)),box=$('gearCompare');box.classList.remove('hidden');
+ box.innerHTML=`<div class="compareCard"><b class="${item.rar}">${item.name}</b><small>${item.rar.toUpperCase()} • ${item.slot}<br>Power ${item.power}${item.desc?'<br>'+item.desc:''}</small><p class="${delta>=0?'good':'bad'}">${delta>=0?'+':''}${delta} vs equipped</p><button id="compareEquip">Equip</button></div><div class="compareCard"><b>${cur?.name||'Empty slot'}</b><small>${cur?`${cur.rar.toUpperCase()} • ${cur.slot}<br>Power ${cur.power}${cur.desc?'<br>'+cur.desc:''}`:'Nothing equipped'}</small></div>`;
+ $('compareEquip').onclick=()=>equip(item)
+}
+function equipBestGear(){
+ let changed=0;for(let slot of gearSlots){let candidates=P.inventory.filter(i=>i.slot===slot&&(!i.classLock||i.classLock===P.class));if(!candidates.length)continue;let best=candidates.reduce((a,b)=>itemScore(b)>itemScore(a)?b:a,candidates[0]);if(!P.gear[slot]||itemScore(best)>itemScore(P.gear[slot])){P.gear[slot]=best;changed++}}
+ recalc();renderGear();toast(changed?`Equipped best gear in ${changed} slot${changed===1?'':'s'}`:'Current gear is already best')
+}
+function renderGear(){
+ $('gearSlots').innerHTML=gearSlots.map(slot=>{let i=P.gear[slot];return `<div class="slot"><b>${slot.toUpperCase()}</b><small>${i?`${i.name}<br>${i.rar.toUpperCase()} • Power ${i.power}`:'Empty'}</small></div>`}).join('');
+ let S=sets[P.class],c=getSetCount();$('setBonus').textContent=S?`${S.name}: ${c}/3 • ${S.two} • ${S.three}`:'';
+ $('inventory').innerHTML='';[...P.inventory].reverse().forEach(i=>{let cur=P.gear[i.slot],delta=Math.round(itemScore(i)-itemScore(cur)),d=document.createElement('div');d.className='item '+(delta>0?'upgrade':'');d.innerHTML=`<div class="name ${i.rar}">${i.name}</div><small>${i.rar.toUpperCase()} • ${i.slot} • Power ${i.power}${i.desc?'<br>'+i.desc:''}${i.classLock?'<br>'+i.classLock+' only':''}</small><span class="delta ${delta>0?'good':delta<0?'bad':''}">${delta>0?'+':''}${delta} vs equipped</span>`;d.onclick=()=>showGearCompare(i);$('inventory').appendChild(d)})
+}
+$('equipBest').onclick=equipBestGear;
+function pickup(d){P.inventory.push(d.item);drops.splice(drops.indexOf(d),1);toast(d.item.rar.toUpperCase()+': '+d.item.name)}
+
+const passiveNodes=[
+{id:'root',n:'Ashen Heart',d:'The centre of the Web.',x:680,y:410,cost:0,max:1,req:null},
+{id:'ferocity',n:'Ferocity',d:'+2.5% damage per rank.',x:475,y:410,cost:2,max:10,req:'root'},
+{id:'bloodrush',n:'Blood Rush',d:'Offensive path.',x:300,y:315,cost:4,max:5,req:'ferocity:5'},
+{id:'executionweb',n:'Execution',d:'Offensive path.',x:300,y:505,cost:4,max:5,req:'ferocity:5'},
+{id:'savagery',n:'Savagery',d:'Deep offence investment.',x:135,y:410,cost:6,max:10,req:'bloodrush:3|executionweb:3'},
+{id:'bloodthrone',n:'Blood Throne',d:'CAPSTONE • +42% damage, -12% HP.',x:5,y:410,cost:35,max:1,req:'savagery:10',cap:true},
+{id:'vitality',n:'Vitality',d:'+3.5% HP per rank.',x:680,y:610,cost:2,max:10,req:'root'},
+{id:'ironwall',n:'Iron Wall',d:'+2.5% HP per rank.',x:520,y:725,cost:4,max:8,req:'vitality:5'},
+{id:'recoveryweb',n:'Second Wind',d:'Defensive progression.',x:840,y:725,cost:5,max:6,req:'vitality:5'},
+{id:'unyielding',n:'Unyielding',d:'Deep defence investment.',x:680,y:820,cost:7,max:6,req:'ironwall:4|recoveryweb:3'},
+{id:'immortal',n:'Immortal Frame',d:'CAPSTONE • +45% maximum HP.',x:680,y:880,cost:45,max:1,req:'unyielding:6',cap:true},
+{id:'precision',n:'Precision',d:'+0.6% crit per rank.',x:885,y:410,cost:2,max:10,req:'root'},
+{id:'swiftness',n:'Swiftness',d:'+1.2% move speed per rank.',x:1050,y:315,cost:3,max:10,req:'precision:4'},
+{id:'reflex',n:'Reflex',d:'Mobility progression.',x:1050,y:505,cost:5,max:6,req:'precision:4'},
+{id:'momentumweb',n:'Momentum',d:'Deep mobility investment.',x:1215,y:410,cost:6,max:8,req:'swiftness:5|reflex:3'},
+{id:'stormstep',n:'Stormstep',d:'CAPSTONE • +22% movement speed.',x:1360,y:410,cost:40,max:1,req:'momentumweb:8',cap:true},
+{id:'masteryweb',n:'Ability Mastery',d:'+1.8% total damage per rank.',x:680,y:205,cost:3,max:12,req:'root'},
+{id:'accelerant',n:'Accelerant',d:'Ability progression.',x:520,y:95,cost:4,max:8,req:'masteryweb:5'},
+{id:'reachweb',n:'Cataclysmic Reach',d:'Ability progression.',x:840,y:95,cost:4,max:8,req:'masteryweb:5'},
+{id:'deepmastery',n:'Deep Mastery',d:'Heavy skill investment.',x:680,y:20,cost:8,max:8,req:'accelerant:4|reachweb:4'},
+{id:'engine',n:'Engine of Ruin',d:'CAPSTONE • +55% total damage.',x:680,y:-15,cost:50,max:1,req:'deepmastery:8',cap:true},
+{id:'apex',n:'APEX OF ASH',d:'100 POINT APEX • enormous universal power.',x:660,y:405,cost:100,max:1,req:'bloodthrone:1|immortal:1|stormstep:1|engine:1',apex:true}
+];
+function webReqMet(req){if(!req)return true;return req.split('|').every(part=>{let[id,count]=part.split(':');return(webRanks[id]||0)>=Number(count||1)||P.nodes.has(id)})}
+function applyWebEffects(){P.speed=155*(1+(webRanks.swiftness||0)*.012)*(P.nodes.has('stormstep')?1.22:1)}
+function renderPassive(){
+ $('passivePts').textContent=P.passivePts;$('passiveTree').innerHTML='';
+ passiveNodes.forEach(n=>{let rank=webRanks[n.id]||0,active=n.max===1?P.nodes.has(n.id):rank>=n.max,ok=webReqMet(n.req),el=document.createElement('div');el.className='node '+((rank>0||P.nodes.has(n.id))?'invested ':'')+(!ok&&!active?'locked ':'')+(n.cap?'capstone ':'')+(n.apex?'apex ':'');el.style.left=n.x+'px';el.style.top=n.y+'px';el.innerHTML=`<b>${n.n}</b><small>${n.d}</small><span class="nodeCost">${n.max>1?`Rank ${rank}/${n.max} • `:''}${n.cost} pts</span>`;el.onclick=()=>{if(!ok||active||P.passivePts<n.cost)return;P.passivePts-=n.cost;webRanks[n.id]=rank+1;if(webRanks[n.id]>=n.max)P.nodes.add(n.id);applyWebEffects();renderPassive();toast(n.n+(n.max>1?' rank '+webRanks[n.id]:' unlocked'))};$('passiveTree').appendChild(el)})
+}
+const evoNodes=[
+{id:'power',n:'Overcharge',d:'+55% damage',x:385,y:75,req:null},
+{id:'wide',n:'Expansive',d:'+50% radius',x:205,y:210,req:'power'},
+{id:'rapid',n:'Relentless',d:'-28% cooldown',x:565,y:210,req:'power'},
+{id:'cataclysm',n:'Final Evolution',d:'+250% damage',x:385,y:365,req:'wide|rapid'}
+];
+function renderAbilities(){
+ let A=classes[P.class].abilities;$('abilities').innerHTML='';
+ A.forEach(a=>{let s=P.abilityState[a.id],m=abilityMods(a.id),d=document.createElement('div');d.className='ability '+(P.selectedAbility===a.id?'selected':'');d.innerHTML=`<b>${a.name}</b><small>Lv ${s.level} • XP ${Math.floor(s.xp)}/${s.xpNeed} • Evolution points ${s.points}<br>Current gear multiplier: ×${m.mult.toFixed(1)}</small>`;d.onclick=()=>{P.selectedAbility=a.id;renderAbilities();renderAbilityTree()};$('abilities').appendChild(d)});renderAbilityTree()
+}
+function renderAbilityTree(){
+ let s=P.abilityState[P.selectedAbility];$('abilityTree').innerHTML='';
+ evoNodes.forEach(n=>{let req=n.req?.split('|')||[],ok=!n.req||req.some(r=>s.nodes.has(r)),active=s.nodes.has(n.id),el=document.createElement('div');el.className='node '+(active?'active ':'')+(!ok&&!active?'locked':'');el.style.left=n.x+'px';el.style.top=n.y+'px';el.innerHTML=`<b>${n.n}</b><small>${n.d}</small>`;el.onclick=()=>{if(active||!ok||s.points<1)return;s.points--;s.nodes.add(n.id);renderAbilities();toast('Ability evolved: '+n.n)};$('abilityTree').appendChild(el)})
+}
+function modal(id,open=true){$(id).classList.toggle('hidden',!open);if(id==='gearModal'&&open)renderGear();if(id==='abilityModal'&&open)renderAbilities();if(id==='treeModal'&&open)renderPassive()}
+$('gearBtn').onclick=()=>modal('gearModal');$('abilityBtn').onclick=()=>modal('abilityModal');$('treeBtn').onclick=()=>modal('treeModal');$('helpBtn').onclick=()=>modal('helpModal');document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>modal(b.dataset.close,false));
+
+function renderClasses(){
+ document.querySelectorAll('.selectClassBtn').forEach(btn=>{
+   btn.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();chooseClass(btn.dataset.class)};
+ });
+}
+function updateCooldownGauges(){
+ if(!P.class)return;let A=classes[P.class].abilities;
+ [['skill1',A[0]],['skill2',A[1]],['skill3',A[2]],['ult',A[3]]].forEach(([id,a])=>{let b=$(id),rem=P.cooldowns[a.id]||0,max=Math.max(.01,a.cd*abilityMods(a.id).cd),frac=Math.max(0,Math.min(1,rem/max));if(rem>0){let deg=Math.round(frac*360);b.classList.add('cooling');b.classList.remove('ready');b.style.background=`conic-gradient(rgba(7,9,12,.82) 0deg ${deg}deg,#263342 ${deg}deg 360deg)`;b.title=rem.toFixed(1)+'s cooldown'}else{b.classList.remove('cooling');b.classList.add('ready');b.style.background='';b.title='Ready'}})
+}
+function update(dt){
+ if(!P.class)return;
+ Object.keys(P.cooldowns).forEach(k=>P.cooldowns[k]=Math.max(0,P.cooldowns[k]-dt));P.dashCd=Math.max(0,P.dashCd-dt);
+ let m=getMove(),len=Math.hypot(m.x,m.y);if(len>1){m.x/=len;m.y/=len}P.x=clamp(P.x+m.x*P.speed*dt,25,world.w-25);P.y=clamp(P.y+m.y*P.speed*dt,25,world.h-25);
+ let inSafe=Math.hypot(P.x-sanctuary.x,P.y-sanctuary.y)<sanctuary.r;
+ if(inSafe){P.hp=Math.min(P.effectiveMaxHp,P.hp+P.effectiveMaxHp*.17*dt);if(hunt.active){hunt.active=false;enemies=[];hunt.bossAlive=false}}
+ else if(!hunt.active){hunt.active=true;hunt.spawnClock=.1;toast('The endless hunt begins')}
+ updateHuntSpawner(dt);
+ enemies.slice().forEach((e,idx)=>{e.hit=Math.max(0,e.hit-dt);let dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy)||1,sx=0,sy=0;for(let j=0;j<enemies.length;j++){if(j===idx)continue;let o=enemies[j],ox=e.x-o.x,oy=e.y-o.y,od=Math.hypot(ox,oy)||1,min=e.r+o.r+10;if(od<min){sx+=ox/od*(min-od);sy+=oy/od*(min-od)}}e.x+=sx*dt*2.2;e.y+=sy*dt*2.2;if(e.telegraph>0){e.telegraph-=dt;if(e.telegraph<=0){let nd=Math.hypot(P.x-e.x,P.y-e.y);if(nd<e.range+P.r+12&&!inSafe)P.hp-=e.dmg;e.hit=e.recovery}}else if(!inSafe&&d<820){if(d>e.range+P.r+3){e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt}else if(e.hit<=0){e.telegraph=e.windup;e.telegraphMax=e.windup}}});
+ let trapped=enemies.filter(e=>dist(P,e)<P.r+e.r+15);if(trapped.length>=6){trapped.forEach(e=>{let dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*45*dt*8;e.y+=dy/d*45*dt*8})}
+ if(P.hp<=0){P.hp=P.effectiveMaxHp;P.x=sanctuary.x;P.y=sanctuary.y;P.gold=Math.floor(P.gold*.9);enemies=[];hunt.active=false;hunt.bossAlive=false;toast('You fell • returned to Sanctuary')}
+ drops.slice().forEach(d=>{d.t+=dt;if(dist(P,d)<42)pickup(d)});fx.slice().forEach(f=>{f.t-=dt;if(f.t<=0)fx.splice(fx.indexOf(f),1)});
+ recalc();applyWebEffects();updateCooldownGauges();$('hpBar').style.width=(100*P.hp/P.effectiveMaxHp)+'%';$('xpBar').style.width=(100*P.xp/P.xpNeed)+'%';$('lvl').textContent=P.level;$('pow').textContent=Math.round(P.damage);$('tier').textContent=P.tier;$('obj').textContent=P.huntKills+' / 20';$('zoneStatus').querySelector('b').textContent=inSafe?'SANCTUARY':'ENDLESS HUNT';$('zoneText').textContent=inSafe?'Safe • healing':`${enemies.length} enemies • ${hunt.bossAlive?'BOSS ACTIVE':'horde active'}`;
+}
+function draw(){
+ let sc=devicePixelRatio,W=canvas.width/sc,H=canvas.height/sc;ctx.setTransform(sc,0,0,sc,0,0);ctx.clearRect(0,0,W,H);let cx=clamp(P.x-W/2,0,world.w-W),cy=clamp(P.y-H/2,0,world.h-H);ctx.save();ctx.translate(-cx,-cy);
+ ctx.fillStyle='#11171b';ctx.fillRect(0,0,world.w,world.h);ctx.strokeStyle='#20282e';for(let x=0;x<world.w;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,world.h);ctx.stroke()}for(let y=0;y<world.h;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(world.w,y);ctx.stroke()}
+ ctx.fillStyle='rgba(75,180,132,.08)';ctx.strokeStyle='rgba(102,225,166,.55)';ctx.lineWidth=4;ctx.beginPath();ctx.arc(sanctuary.x,sanctuary.y,sanctuary.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(128,230,187,.75)';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('SANCTUARY',sanctuary.x,sanctuary.y-sanctuary.r+25);
+ for(let d of drops){let col={common:'#ddd',magic:'#78b3ff',rare:'#ffd55f',legendary:'#ff9a4b',unique:'#ce83ff',set:'#51e18b',mythic:'#ff5a76'}[d.item.rar];ctx.fillStyle=col;ctx.save();ctx.translate(d.x,d.y);ctx.rotate(d.t);ctx.fillRect(-7,-7,14,14);ctx.restore()}
+ for(let e of enemies){if(e.telegraph>0){let p=1-e.telegraph/e.telegraphMax;ctx.globalAlpha=.2+.4*p;ctx.fillStyle=e.boss?'#ff4f35':'#ff8b54';ctx.beginPath();ctx.arc(e.x,e.y,e.range+P.r+9,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle='#ffc18a';ctx.lineWidth=2+3*p;ctx.beginPath();ctx.arc(e.x,e.y,(e.range+P.r+9)*(.35+.65*p),0,Math.PI*2);ctx.stroke()}ctx.fillStyle=e.boss?'#b44729':e.elite?'#9f5a1f':e.color;ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1a1a1a';ctx.fillRect(e.x-22,e.y-e.r-10,44,4);ctx.fillStyle=e.boss?'#e36d3b':'#cc4654';ctx.fillRect(e.x-22,e.y-e.r-10,44*Math.max(0,e.hp/e.maxHp),4)}
+ for(let f of fx){ctx.globalAlpha=Math.max(0,f.t/.35);ctx.strokeStyle='#f0c96e';ctx.lineWidth=3;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(1-f.t/.5),0,Math.PI*2);ctx.stroke()}ctx.globalAlpha=1;ctx.fillStyle=P.class?classes[P.class].color:'#ddd';ctx.beginPath();ctx.arc(P.x,P.y,P.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e7d8a3';ctx.lineWidth=3;ctx.stroke();ctx.restore()
+}
+let last=performance.now();function loop(t){let dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
+renderClasses();requestAnimationFrame(loop);
+})();
+</script>
+</body></html>
