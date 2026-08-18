@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,maximum-scale=1">
+<title>Ashenfall Reborn Prototype 0.1</title>
+<meta name="theme-color" content="#0b0e12">
+<style>
+:root{
+ --bg:#0b0e12;--panel:#121821;--panel2:#18202b;--line:#2a3544;--text:#eef2f6;--muted:#99a6b5;
+ --good:#63d88a;--bad:#ff6f7e;--warn:#e5bd61;--accent:#9a4c55;--gold:#d5ad5b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;-webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;touch-action:manipulation}
+.hidden{display:none!important}
+#game{position:fixed;inset:0}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.topbar{position:absolute;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));z-index:5;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.hudcard{background:rgba(12,16,22,.91);border:1px solid var(--line);border-radius:10px;padding:7px 9px;backdrop-filter:blur(8px);font-size:11px}
+.hudcard b{font-size:12px}.bars{width:230px}
+.bar{height:9px;background:#222b37;border-radius:999px;overflow:hidden;margin-top:4px}.fill{height:100%;width:100%}
+.hp{background:#b94350}.xp{background:#587cb6}
+#zoneHud{text-align:right}
+#zoneHud b{color:#77dfaa}
+.bottom{position:absolute;left:0;right:0;bottom:max(0px,env(safe-area-inset-bottom));z-index:6;height:190px;pointer-events:none}
+.joy{position:absolute;left:28px;bottom:24px;width:132px;height:132px;border-radius:50%;background:rgba(75,86,101,.24);border:1px solid #4a586a;pointer-events:auto;touch-action:none}
+.knob{position:absolute;width:54px;height:54px;left:39px;top:39px;border-radius:50%;background:rgba(190,203,221,.55);border:1px solid #b3bfcc}
+.actions{position:absolute;right:18px;bottom:16px;width:255px;height:170px;pointer-events:auto}
+.act{position:absolute;border-radius:50%;border:1px solid #536172;background:#222d3a;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:11px;overflow:hidden}
+.act.ready{box-shadow:0 0 0 2px rgba(99,216,138,.28)}
+.act .shade{position:absolute;inset:0;border-radius:50%;display:none;background:conic-gradient(rgba(3,5,8,.86) 0 360deg,transparent 0);z-index:1}
+.act .cd{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:3;font-size:15px;text-shadow:0 2px 4px #000}
+.act .label{position:relative;z-index:2;padding:4px}
+#basic{width:78px;height:78px;right:0;bottom:8px;background:#5b2930;border-color:#944650}
+#skill1{width:58px;height:58px;right:82px;bottom:4px}
+#skill2{width:58px;height:58px;right:24px;bottom:86px}
+#skill3{width:58px;height:58px;right:94px;bottom:102px}
+#ult{width:64px;height:64px;right:160px;bottom:62px;background:#463150;border-color:#7a5a86}
+#dash{width:52px;height:52px;right:165px;bottom:2px;background:#293a48}
+.menuBtns{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:7px;pointer-events:auto}
+.menuBtns button{background:#161d26;border:1px solid #39475a;border-radius:9px;padding:8px 11px;font-size:11px}
+#toast{position:absolute;top:95px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(10,13,18,.94);border:1px solid #465368;border-radius:9px;padding:8px 12px;font-size:12px;opacity:0;transition:.15s;pointer-events:none}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(5,7,10,.94);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
+.panel{width:min(980px,100%);max-height:92vh;overflow:auto;background:#10161e;border:1px solid #344153;border-radius:15px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.head h2{margin:0;font-size:22px}.head p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.45}
+.close{border:1px solid #46566b;background:#1a2330;border-radius:8px;padding:7px 9px}
+.classGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.classCard{display:flex;flex-direction:column;min-height:190px;background:#171e27;border:1px solid #394555;border-radius:12px;padding:13px}
+.classCard h3{margin:0 0 5px;font-size:20px}.classCard small{color:#acb7c4;line-height:1.45}
+.weaps{margin:10px 0 5px;color:#e2c778;font-size:12px}
+.selectBtn{margin-top:auto;width:100%;min-height:48px;border:1px solid #a24e58;background:#6d3038;border-radius:9px;font-weight:900}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.slot,.item,.compare{background:#151c25;border:1px solid #344153;border-radius:10px;padding:9px}
+.slot b{font-size:10px;color:#a9b4c2}.slot .name{font-size:12px;font-weight:800;margin-top:4px}
+.item{cursor:pointer}.item.upgrade{border-color:#5e8b65}.item .name{font-weight:800}.item small{display:block;color:#aab5c1;line-height:1.35;margin-top:4px}
+.delta{display:inline-block;margin-top:6px;padding:2px 6px;border-radius:999px;border:1px solid #384452;font-size:9px}.good{color:var(--good)}.bad{color:var(--bad)}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}.toolbar button{background:#1a2330;border:1px solid #405066;border-radius:8px;padding:8px 10px}
+.r-common{color:#ddd}.r-magic{color:#73aefd}.r-rare{color:#f2cf59}.r-legendary{color:#ff964b}.r-unique{color:#ce83ff}.r-mythic{color:#ff607a}
+.sectionTitle{margin:12px 0 7px;font-size:13px;color:#d7dee6}
+#journal{font-size:11px;color:#aeb8c4;line-height:1.4}
+.note{padding:9px;border:1px solid #5b4c25;background:#231f12;border-radius:9px;color:#e2d5a4;font-size:11px;line-height:1.4}
+@media(max-width:720px){
+ .classGrid,.grid2{grid-template-columns:1fr}
+ .panel{width:100%;max-height:none;border-radius:12px}
+ .bars{width:175px}.topbar{gap:4px}.hudcard{padding:6px 7px}
+ .actions{right:7px;transform:scale(.92);transform-origin:100% 100%}
+ .joy{left:12px;bottom:16px;transform:scale(.92);transform-origin:0 100%}
+ .menuBtns{bottom:4px}
+}
+</style>
+</head>
+<body>
+<div id="game">
+<canvas id="canvas"></canvas>
+
+<div class="topbar">
+ <div class="hudcard bars">
+   <div><b id="className">No class</b> • Lv <span id="level">1</span> • Power <span id="power">0</span></div>
+   <div class="bar"><div id="hpFill" class="fill hp"></div></div>
+   <div class="bar"><div id="xpFill" class="fill xp"></div></div>
+ </div>
+ <div id="zoneHud" class="hudcard"><b>SANCTUARY</b><br><span id="zoneText">Safe • healing</span></div>
+</div>
+
+<div id="toast"></div>
+
+<div class="bottom">
+ <div id="joystick" class="joy"><div id="knob" class="knob"></div></div>
+ <div class="actions">
+   <button id="basic" class="act"><span class="label">ATTACK</span></button>
+   <button id="skill1" class="act"><span class="label">Skill 1</span><span class="shade"></span><span class="cd"></span></button>
+   <button id="skill2" class="act"><span class="label">Skill 2</span><span class="shade"></span><span class="cd"></span></button>
+   <button id="skill3" class="act"><span class="label">Skill 3</span><span class="shade"></span><span class="cd"></span></button>
+   <button id="ult" class="act"><span class="label">ULT</span><span class="shade"></span><span class="cd"></span></button>
+   <button id="dash" class="act"><span class="label">DASH</span><span class="shade"></span><span class="cd"></span></button>
+ </div>
+ <div class="menuBtns">
+   <button id="gearBtn">GEAR</button>
+   <button id="townBtn">TOWN</button>
+   <button id="helpBtn">HELP</button>
+ </div>
+</div>
+</div>
+
+<div id="classModal" class="modal">
+ <div class="panel">
+  <div class="head"><div><h2>Choose your class</h2><p>Pick a class, enter Sanctuary, then leave town to begin the hunt. This prototype focuses on the full ARPG loop first.</p></div></div>
+  <div class="classGrid">
+   <div class="classCard"><h3>🪓 Berserker</h3><small>Close-range destroyer. High impact, short cooldowns, heavy weapon scaling.</small><div class="weaps">Greatsword • Greataxe • Twin Axes</div><button class="selectBtn" data-class="Berserker">SELECT BERSERKER</button></div>
+   <div class="classCard"><h3>🏹 Ranger</h3><small>Mobile ranged hunter. Multishot is intentionally range-limited and target-capped.</small><div class="weaps">Longbow • Crossbow • Twin Daggers</div><button class="selectBtn" data-class="Ranger">SELECT RANGER</button></div>
+   <div class="classCard"><h3>🔥 Arcanist</h3><small>Elemental caster with area control, burst spells and glass-cannon progression.</small><div class="weaps">Staff • Wand • Spellblade</div><button class="selectBtn" data-class="Arcanist">SELECT ARCANIST</button></div>
+   <div class="classCard"><h3>💀 Necromancer</h3><small>Curse and bone specialist. Sustained AoE, corpse-like explosions and ranged pressure.</small><div class="weaps">Scythe • Bone Staff • Ritual Dagger</div><button class="selectBtn" data-class="Necromancer">SELECT NECROMANCER</button></div>
+  </div>
+ </div>
+</div>
+
+<div id="gearModal" class="modal hidden">
+ <div class="panel">
+  <div class="head"><div><h2>Inventory & Equipment</h2><p>Loot scales with your level and World Tier. Equip Best uses a slot-aware score, but ability-specific items can still be worth keeping.</p></div><button class="close" data-close="gearModal">Close</button></div>
+  <div class="toolbar"><button id="equipBest">⚡ Equip Best</button><button id="salvageJunk">Salvage Commons</button></div>
+  <div class="sectionTitle">Equipped</div><div id="slots" class="grid2"></div>
+  <div id="compareBox"></div>
+  <div class="sectionTitle">Inventory</div><div id="inventory" class="grid2"></div>
+ </div>
+</div>
+
+<div id="helpModal" class="modal hidden">
+ <div class="panel">
+  <div class="head"><div><h2>Ashenfall Reborn 0.1</h2><p>A fresh Diablo-style mobile ARPG prototype built around a complete playable loop rather than patching the old prototype.</p></div><button class="close" data-close="helpModal">Close</button></div>
+  <div class="note" style="margin-top:10px">Sanctuary is safe. Leave it to fight. Normal enemies should die quickly, elites require attention, and bosses are periodically injected into the horde. The skill tree comes later, after combat and loot feel right.</div>
+ </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'),ctx=canvas.getContext('2d');
+let DPR=Math.max(1,Math.min(2,devicePixelRatio||1));
+function resize(){canvas.width=innerWidth*DPR;canvas.height=innerHeight*DPR}
+addEventListener('resize',resize);resize();
+
+const CLASSES={
+ Berserker:{color:'#b34b43',baseDamage:24,maxHp:180,speed:150,weapon:'Greataxe',skills:[
+  {id:'whirl',name:'Whirlwind',cd:2.4,range:115,mult:1.65,cap:14},
+  {id:'slam',name:'Earthshatter',cd:4.8,range:150,mult:2.6,cap:10},
+  {id:'leap',name:'Ruin Leap',cd:6.2,range:175,mult:2.2,cap:8},
+  {id:'wrath',name:'Wrath',cd:16,range:190,mult:4.2,cap:18}
+ ]},
+ Ranger:{color:'#5f9f69',baseDamage:20,maxHp:125,speed:165,weapon:'Longbow',skills:[
+  {id:'multi',name:'Multishot',cd:2.0,range:215,mult:1.35,cap:8},
+  {id:'rain',name:'Arrow Rain',cd:5.0,range:175,mult:2.0,cap:12},
+  {id:'trap',name:'Shadow Trap',cd:6.2,range:130,mult:2.7,cap:7},
+  {id:'volley',name:'Deadeye Volley',cd:16,range:235,mult:3.4,cap:14}
+ ]},
+ Arcanist:{color:'#6d82c5',baseDamage:22,maxHp:110,speed:150,weapon:'Staff',skills:[
+  {id:'bolt',name:'Arc Bolt',cd:1.8,range:185,mult:1.5,cap:6},
+  {id:'meteor',name:'Meteor',cd:5.2,range:150,mult:2.9,cap:10},
+  {id:'nova',name:'Frost Nova',cd:6.0,range:125,mult:2.3,cap:12},
+  {id:'storm',name:'Cataclysm',cd:17,range:205,mult:4.0,cap:16}
+ ]},
+ Necromancer:{color:'#8f6ca7',baseDamage:21,maxHp:135,speed:145,weapon:'Scythe',skills:[
+  {id:'spear',name:'Bone Spear',cd:2.1,range:205,mult:1.55,cap:6},
+  {id:'curse',name:'Soul Curse',cd:4.8,range:155,mult:2.0,cap:12},
+  {id:'corpse',name:'Grave Burst',cd:6.1,range:135,mult:2.8,cap:10},
+  {id:'army',name:'Army of Ash',cd:18,range:190,mult:3.8,cap:16}
+ ]}
+};
+
+const WORLD={w:2600,h:1700};
+const TOWN={x:1300,y:850,r:270};
+const SLOTS=['weapon','helm','chest','gloves','boots','ring','amulet'];
+const RARITIES=['common','magic','rare','legendary','unique','mythic'];
+const RAR_MULT={common:1,magic:1.08,rare:1.18,legendary:1.34,unique:1.52,mythic:1.78};
+const RAR_CHANCE=[.43,.29,.16,.08,.032,.008];
+
+const P={
+ class:null,x:TOWN.x,y:TOWN.y,r:18,hp:100,maxHp:100,baseDamage:20,damage:20,speed:150,
+ level:1,xp:0,xpNeed:90,tier:1,gold:0,kills:0,huntKills:0,
+ inventory:[],gear:{},cooldowns:{},cooldownMax:{},dashCd:0,phase:0
+};
+
+let enemies=[],drops=[],fx=[];
+const HUNT={active:false,spawnClock:0,bossProgress:0,bossAlive:false,maxEnemies:42};
+
+const ENEMY={
+ fodder:{name:'Ashling',weight:48,r:14,hp:.65,speed:45,dmg:.65,range:28,windup:.35,recovery:1.0,color:'#74333a'},
+ skirmisher:{name:'Ravager',weight:28,r:15,hp:.85,speed:56,dmg:.78,range:32,windup:.5,recovery:1.15,color:'#72404d'},
+ bruiser:{name:'Dread Mauler',weight:17,r:21,hp:1.8,speed:27,dmg:1.8,range:42,windup:1.05,recovery:1.75,color:'#87562f'},
+ executioner:{name:'Ash Executioner',weight:7,r:24,hp:2.7,speed:21,dmg:2.4,range:48,windup:1.45,recovery:2.15,color:'#93432d'}
+};
+
+function rand(a,b){return a+Math.random()*(b-a)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function toast(t){let el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>el.style.opacity=0,1100)}
+
+function chooseClass(name){
+ const C=CLASSES[name];
+ P.class=name;P.maxHp=C.maxHp;P.hp=C.maxHp;P.baseDamage=C.baseDamage;P.speed=C.speed;P.x=TOWN.x;P.y=TOWN.y;
+ P.inventory=[];P.gear={};P.cooldowns={};P.cooldownMax={};P.level=1;P.xp=0;P.xpNeed=90;P.tier=1;P.kills=0;P.huntKills=0;
+ P.inventory.push(makeItem('weapon','rare',true),makeItem('helm','magic',true),makeItem('chest','magic',true));
+ equipBest();
+ refreshSkillLabels();recalc();
+ $('className').textContent=name;
+ $('classModal').classList.add('hidden');
+ enemies=[];drops=[];HUNT.active=false;HUNT.bossAlive=false;HUNT.bossProgress=0;HUNT.spawnClock=0;
+ toast(name+' awakened');
+}
+
+function rarityRoll(){
+ let r=Math.random(),acc=0;
+ for(let i=0;i<RARITIES.length;i++){acc+=RAR_CHANCE[i];if(r<=acc)return RARITIES[i]}
+ return 'common';
+}
+function lootBase(){
+ // Designed so player damage roughly doubles every ~3 tiers while trash HP grows slower.
+ return (22+P.level*4.5)*Math.pow(1.20,P.tier-1);
+}
+function makeItem(slot,rar='common',starter=false){
+ let power=Math.round(lootBase()*RAR_MULT[rar]*(slot==='weapon'?1.25:1)*rand(starter?.96:.90,starter?1.04:1.12));
+ let names={common:['Ashen','Worn'],magic:['Runed','Savage'],rare:['Bloodforged','Grim'],legendary:['Doomcarved','Hellmarked'],unique:['Godscar','Anathema'],mythic:['Apex','Cataclysm']}[rar];
+ let noun={weapon:CLASSES[P.class]?.weapon||'Weapon',helm:'Helm',chest:'Chestguard',gloves:'Gauntlets',boots:'Greaves',ring:'Ring',amulet:'Amulet'}[slot];
+ let it={id:Math.random().toString(36).slice(2),slot,rar,power,name:names[Math.floor(rand(0,names.length))]+' '+noun};
+ it.damage=slot==='weapon'?Math.round(power*.72):Math.round(power*.05);
+ it.armor=slot==='weapon'?0:Math.round(power*.55);
+ it.crit=RARITIES.indexOf(rar)>=2?Math.min(.06,power/6000):0;
+ if(rar==='legendary' || rar==='unique' || rar==='mythic'){
+   const skill=CLASSES[P.class].skills[Math.floor(rand(0,3))];
+   const m=rar==='legendary'?1.35:rar==='unique'?1.75:2.15;
+   it.skillMod={id:skill.id,mult:m};
+   it.desc=`${skill.name} damage ×${m.toFixed(2)}`;
+ }
+ return it;
+}
+function itemScore(i){if(!i)return 0;return i.power+i.damage*2.5+i.armor*.55+i.crit*900+(i.skillMod?i.power*.3:0)}
+function equip(it){P.gear[it.slot]=it;recalc();renderGear();toast('Equipped '+it.name)}
+function equipBest(){
+ let changed=0;
+ for(let slot of SLOTS){
+  let c=P.inventory.filter(i=>i.slot===slot);
+  if(!c.length)continue;
+  let best=c.reduce((a,b)=>itemScore(b)>itemScore(a)?b:a,c[0]);
+  if(!P.gear[slot] || itemScore(best)>itemScore(P.gear[slot])){P.gear[slot]=best;changed++}
+ }
+ recalc();renderGear();if(P.class)toast(changed?'Best gear equipped':'Current gear already best');
+}
+function recalc(){
+ if(!P.class)return;
+ let C=CLASSES[P.class],dmg=C.baseDamage,hp=C.maxHp,crit=.05;
+ Object.values(P.gear).forEach(i=>{if(!i)return;dmg+=i.damage||0;hp+=i.armor*.28;crit+=i.crit||0});
+ P.damage=dmg;P.maxHp=hp;P.crit=Math.min(.45,crit);if(P.hp>P.maxHp)P.hp=P.maxHp;
+}
+function skillMultiplier(id){
+ let m=1;
+ Object.values(P.gear).forEach(i=>{if(i?.skillMod?.id===id)m*=i.skillMod.mult});
+ return m;
+}
+function renderGear(){
+ if(!P.class)return;
+ $('slots').innerHTML=SLOTS.map(s=>{let i=P.gear[s];return `<div class="slot"><b>${s.toUpperCase()}</b><div class="name ${i?'r-'+i.rar:''}">${i?.name||'Empty'}</div><small>${i?`Power ${i.power}${i.desc?'<br>'+i.desc:''}`:'No item equipped'}</small></div>`}).join('');
+ $('inventory').innerHTML='';
+ [...P.inventory].reverse().forEach(i=>{
+  let cur=P.gear[i.slot],delta=Math.round(itemScore(i)-itemScore(cur)),d=document.createElement('div');d.className='item '+(delta>0?'upgrade':'');
+  d.innerHTML=`<div class="name r-${i.rar}">${i.name}</div><small>${i.rar.toUpperCase()} • ${i.slot}<br>Power ${i.power}${i.desc?'<br>'+i.desc:''}</small><span class="delta ${delta>0?'good':delta<0?'bad':''}">${delta>0?'+':''}${delta} vs equipped</span>`;
+  d.onclick=()=>showCompare(i);$('inventory').appendChild(d)
+ })
+}
+function showCompare(i){
+ let cur=P.gear[i.slot],delta=Math.round(itemScore(i)-itemScore(cur));
+ $('compareBox').innerHTML=`<div class="sectionTitle">Comparison</div><div class="grid2"><div class="compare"><b class="r-${i.rar}">${i.name}</b><small>Power ${i.power}<br>${i.desc||'No special effect'}</small><p class="${delta>=0?'good':'bad'}">${delta>=0?'+':''}${delta} score</p><button id="equipCompare">Equip</button></div><div class="compare"><b>${cur?.name||'Empty'}</b><small>${cur?`Power ${cur.power}<br>${cur.desc||'No special effect'}`:'Nothing equipped'}</small></div></div>`;
+ $('equipCompare').onclick=()=>equip(i);
+}
+function salvageJunk(){
+ let before=P.inventory.length;
+ P.inventory=P.inventory.filter(i=>i.rar!=='common' || P.gear[i.slot]?.id===i.id);
+ P.gold+=(before-P.inventory.length)*3;renderGear();toast('Salvaged '+(before-P.inventory.length)+' items');
+}
+
+function pickEnemyType(){
+ let r=Math.random()*100,a=0;
+ for(let [k,v] of Object.entries(ENEMY)){a+=v.weight;if(r<=a)return[k,v]}
+ return['fodder',ENEMY.fodder]
+}
+function spawnEnemy(force=null,boss=false){
+ if(enemies.length>=HUNT.maxEnemies)return;
+ let [type,T]=force?[force,ENEMY[force]]:pickEnemyType(),a=rand(0,Math.PI*2),d=rand(450,690),x,y,tries=0;
+ do{x=clamp(P.x+Math.cos(a)*d,30,WORLD.w-30);y=clamp(P.y+Math.sin(a)*d,30,WORLD.h-30);a=rand(0,Math.PI*2);d=rand(450,690);tries++}
+ while(Math.hypot(x-TOWN.x,y-TOWN.y)<TOWN.r+80&&tries<10);
+ let base=(22+P.level*4.8)*Math.pow(1.105,P.tier-1);
+ let elite=!boss&&Math.random()<Math.min(.15,.035+P.tier*.008);
+ let e={x,y,type,name:T.name,r:T.r,hp:base*T.hp,maxHp:1,speed:T.speed,dmg:(4.5+P.tier*.85)*T.dmg,range:T.range,windup:T.windup,recovery:T.recovery,telegraph:0,telegraphMax:T.windup,attackCd:rand(.3,1),color:T.color,elite,boss};
+ if(elite){e.hp*=2.15;e.dmg*=1.3;e.r+=3;e.name='Elite '+e.name}
+ if(boss){e.name='BOSS • Cinder Warden';e.hp*=8.5;e.dmg*=1.5;e.r=31;e.speed=18;e.range=58;e.windup=1.75;e.telegraphMax=e.windup;HUNT.bossAlive=true}
+ e.maxHp=e.hp;enemies.push(e);
+}
+function desiredEnemies(){return Math.min(HUNT.maxEnemies,14+P.tier*2+Math.floor(P.level*.45))}
+function updateSpawner(dt){
+ if(!HUNT.active)return;
+ HUNT.spawnClock-=dt;
+ if(HUNT.spawnClock<=0&&enemies.length<desiredEnemies()){
+  let deficit=desiredEnemies()-enemies.length;
+  let burst=Math.min(deficit,Math.random()<.20?Math.floor(rand(3,6)):Math.floor(rand(1,3)));
+  for(let i=0;i<burst;i++)spawnEnemy();
+  HUNT.spawnClock=rand(.16,.55);
+ }
+ if(!HUNT.bossAlive&&HUNT.bossProgress>=32){spawnEnemy('executioner',true);HUNT.bossProgress=0;toast('Cinder Warden enters the hunt')}
+}
+function damageEnemy(e,amount){
+ e.hp-=amount;
+ if(e.hp<=0)kill(e);
+}
+function kill(e){
+ let i=enemies.indexOf(e);if(i>=0)enemies.splice(i,1);
+ P.kills++;P.huntKills++;HUNT.bossProgress++;gainXP(10+P.tier*2);
+ if(e.boss){HUNT.bossAlive=false;P.gold+=35;toast('Boss defeated')}
+ if(Math.random()<.58){
+  let rar=rarityRoll(),slot=SLOTS[Math.floor(rand(0,SLOTS.length))],it=makeItem(slot,rar);
+  drops.push({x:e.x,y:e.y,item:it,t:0})
+ }
+ if(P.huntKills>=24){P.huntKills=0;P.tier++;toast('World Tier '+P.tier)}
+}
+function gainXP(v){
+ P.xp+=v;
+ while(P.xp>=P.xpNeed){P.xp-=P.xpNeed;P.level++;P.xpNeed=Math.round(P.xpNeed*1.20);P.hp=P.maxHp;toast('Level '+P.level)}
+}
+function pickup(d){
+ let i=drops.indexOf(d);if(i>=0)drops.splice(i,1);
+ P.inventory.push(d.item);toast(d.item.name);
+ if(P.inventory.length>70)P.inventory.splice(0,P.inventory.length-70);
+}
+
+function attack(){
+ if(!P.class)return;
+ let candidates=enemies.filter(e=>dist(P,e)<72).sort((a,b)=>dist(P,a)-dist(P,b)).slice(0,3);
+ candidates.forEach(e=>damageEnemy(e,P.damage*rand(.88,1.12)*(Math.random()<P.crit?1.8:1)));
+ fx.push({x:P.x,y:P.y,r:78,t:.18});
+}
+function cast(index){
+ if(!P.class)return;
+ let a=CLASSES[P.class].skills[index];if(!a)return;
+ if((P.cooldowns[a.id]||0)>0)return;
+ P.cooldowns[a.id]=a.cd;P.cooldownMax[a.id]=a.cd;
+ let dmg=P.damage*a.mult*skillMultiplier(a.id),targets=enemies.filter(e=>dist(P,e)<=a.range).sort((x,y)=>dist(P,x)-dist(P,y)).slice(0,a.cap);
+ targets.forEach(e=>damageEnemy(e,dmg*rand(.92,1.08)));
+ fx.push({x:P.x,y:P.y,r:a.range,t:.32});
+ toast(a.name+(targets.length?' • '+targets.length+' hit':''));
+}
+function dash(){
+ if(P.dashCd>0||!P.class)return;
+ P.dashCd=2.4;P.phase=.5;
+ let m=getMove(),l=Math.hypot(m.x,m.y);if(l<.15){m={x:1,y:0};l=1}
+ P.x=clamp(P.x+m.x/l*155,25,WORLD.w-25);P.y=clamp(P.y+m.y/l*155,25,WORLD.h-25);
+}
+function refreshSkillLabels(){
+ let A=CLASSES[P.class].skills;
+ ['skill1','skill2','skill3','ult'].forEach((id,i)=>$(id).querySelector('.label').textContent=A[i].name);
+}
+function updateCooldownUI(){
+ if(!P.class)return;
+ let A=CLASSES[P.class].skills;
+ [['skill1',A[0]],['skill2',A[1]],['skill3',A[2]],['ult',A[3]]].forEach(([id,a])=>{
+  let b=$(id),rem=P.cooldowns[a.id]||0,max=P.cooldownMax[a.id]||a.cd,shade=b.querySelector('.shade'),cd=b.querySelector('.cd');
+  if(rem>0){let deg=Math.round((rem/max)*360);shade.style.display='block';shade.style.background=`conic-gradient(rgba(3,5,8,.86) 0deg ${deg}deg,transparent ${deg}deg 360deg)`;cd.style.display='flex';cd.textContent=rem<1?rem.toFixed(1):Math.ceil(rem);b.classList.remove('ready')}
+  else{shade.style.display='none';cd.style.display='none';b.classList.add('ready')}
+ });
+ let b=$('dash'),rem=P.dashCd||0,shade=b.querySelector('.shade'),cd=b.querySelector('.cd');
+ if(rem>0){let deg=Math.round((rem/2.4)*360);shade.style.display='block';shade.style.background=`conic-gradient(rgba(3,5,8,.86) 0deg ${deg}deg,transparent ${deg}deg 360deg)`;cd.style.display='flex';cd.textContent=rem<1?rem.toFixed(1):Math.ceil(rem);b.classList.remove('ready')}
+ else{shade.style.display='none';cd.style.display='none';b.classList.add('ready')}
+}
+
+let joy={id:null,dx:0,dy:0};
+function getMove(){return{x:joy.dx,y:joy.dy}}
+const joyEl=$('joystick'),knob=$('knob');
+function setJoy(x,y){
+ let r=54,rect=joyEl.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2,dx=x-cx,dy=y-cy,l=Math.hypot(dx,dy)||1,m=Math.min(r,l);
+ joy.dx=dx/l*(m/r);joy.dy=dy/l*(m/r);knob.style.transform=`translate(${joy.dx*r}px,${joy.dy*r}px)`
+}
+joyEl.addEventListener('pointerdown',e=>{joy.id=e.pointerId;joyEl.setPointerCapture(e.pointerId);setJoy(e.clientX,e.clientY)});
+joyEl.addEventListener('pointermove',e=>{if(e.pointerId===joy.id)setJoy(e.clientX,e.clientY)});
+joyEl.addEventListener('pointerup',e=>{if(e.pointerId===joy.id){joy.id=null;joy.dx=joy.dy=0;knob.style.transform=''}});
+joyEl.addEventListener('pointercancel',()=>{joy.id=null;joy.dx=joy.dy=0;knob.style.transform=''});
+
+function bind(id,fn){let b=$(id);b.addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();fn()})}
+bind('basic',attack);bind('skill1',()=>cast(0));bind('skill2',()=>cast(1));bind('skill3',()=>cast(2));bind('ult',()=>cast(3));bind('dash',dash);
+document.querySelectorAll('.selectBtn').forEach(b=>b.onclick=()=>chooseClass(b.dataset.class));
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).classList.add('hidden'));
+$('gearBtn').onclick=()=>{renderGear();$('gearModal').classList.remove('hidden')};
+$('townBtn').onclick=()=>{if(!P.class)return;P.x=TOWN.x;P.y=TOWN.y;enemies=[];HUNT.active=false;HUNT.bossAlive=false;toast('Returned to Sanctuary')};
+$('helpBtn').onclick=()=>$('helpModal').classList.remove('hidden');
+$('equipBest').onclick=equipBest;
+$('salvageJunk').onclick=salvageJunk;
+
+function update(dt){
+ if(!P.class)return;
+ Object.keys(P.cooldowns).forEach(k=>P.cooldowns[k]=Math.max(0,P.cooldowns[k]-dt));P.dashCd=Math.max(0,P.dashCd-dt);P.phase=Math.max(0,P.phase-dt);
+ let m=getMove(),l=Math.hypot(m.x,m.y);if(l>1){m.x/=l;m.y/=l}
+ P.x=clamp(P.x+m.x*P.speed*dt,25,WORLD.w-25);P.y=clamp(P.y+m.y*P.speed*dt,25,WORLD.h-25);
+
+ let safe=Math.hypot(P.x-TOWN.x,P.y-TOWN.y)<TOWN.r;
+ if(safe){
+  P.hp=Math.min(P.maxHp,P.hp+P.maxHp*.18*dt);
+  if(HUNT.active){HUNT.active=false;enemies=[];HUNT.bossAlive=false}
+ }else if(!HUNT.active){HUNT.active=true;HUNT.spawnClock=.1;toast('The hunt begins')}
+ updateSpawner(dt);
+
+ enemies.slice().forEach((e,idx)=>{
+  e.attackCd=Math.max(0,e.attackCd-dt);
+  let dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy)||1,sx=0,sy=0;
+  for(let j=0;j<enemies.length;j++){if(j===idx)continue;let o=enemies[j],ox=e.x-o.x,oy=e.y-o.y,od=Math.hypot(ox,oy)||1,min=e.r+o.r+9;if(od<min){sx+=ox/od*(min-od);sy+=oy/od*(min-od)}}
+  e.x+=sx*dt*2.1;e.y+=sy*dt*2.1;
+  if(e.telegraph>0){
+   e.telegraph-=dt;
+   if(e.telegraph<=0){if(Math.hypot(P.x-e.x,P.y-e.y)<e.range+P.r+12&&!safe&&P.phase<=0)P.hp-=e.dmg;e.attackCd=e.recovery}
+  }else if(!safe&&d<820){
+   if(d>e.range+P.r+3){e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt}
+   else if(e.attackCd<=0){e.telegraph=e.windup;e.telegraphMax=e.windup}
+  }
+ });
+
+ let crowd=enemies.filter(e=>dist(P,e)<P.r+e.r+14);
+ if(crowd.length>=6){crowd.forEach(e=>{let dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*44*dt*8;e.y+=dy/d*44*dt*8});P.phase=Math.max(P.phase,.1)}
+
+ if(P.hp<=0){P.hp=P.maxHp;P.x=TOWN.x;P.y=TOWN.y;P.gold=Math.floor(P.gold*.92);enemies=[];HUNT.active=false;HUNT.bossAlive=false;toast('You fell • returned to Sanctuary')}
+ drops.slice().forEach(d=>{d.t+=dt;if(dist(P,d)<42)pickup(d)});
+ fx.slice().forEach(f=>{f.t-=dt;if(f.t<=0)fx.splice(fx.indexOf(f),1)});
+
+ recalc();updateCooldownUI();
+ $('level').textContent=P.level;$('power').textContent=Math.round(P.damage);$('hpFill').style.width=(100*P.hp/P.maxHp)+'%';$('xpFill').style.width=(100*P.xp/P.xpNeed)+'%';
+ $('zoneHud').querySelector('b').textContent=safe?'SANCTUARY':'ASHEN WILDS';
+ $('zoneText').textContent=safe?'Safe • healing':`${enemies.length}/${desiredEnemies()} enemies • WT${P.tier}${HUNT.bossAlive?' • BOSS':''}`;
+}
+
+function draw(){
+ let W=canvas.width/DPR,H=canvas.height/DPR;ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);
+ let cx=clamp(P.x-W/2,0,WORLD.w-W),cy=clamp(P.y-H/2,0,WORLD.h-H);ctx.save();ctx.translate(-cx,-cy);
+ ctx.fillStyle='#11171c';ctx.fillRect(0,0,WORLD.w,WORLD.h);ctx.strokeStyle='#1f2831';
+ for(let x=0;x<WORLD.w;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,WORLD.h);ctx.stroke()}for(let y=0;y<WORLD.h;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(WORLD.w,y);ctx.stroke()}
+ ctx.fillStyle='rgba(76,177,132,.09)';ctx.strokeStyle='rgba(102,224,167,.55)';ctx.lineWidth=4;ctx.beginPath();ctx.arc(TOWN.x,TOWN.y,TOWN.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(126,225,184,.78)';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('SANCTUARY',TOWN.x,TOWN.y-TOWN.r+26);
+
+ for(let d of drops){let col={common:'#ddd',magic:'#73aefd',rare:'#f2cf59',legendary:'#ff964b',unique:'#ce83ff',mythic:'#ff607a'}[d.item.rar];ctx.fillStyle=col;ctx.save();ctx.translate(d.x,d.y);ctx.rotate(d.t);ctx.fillRect(-7,-7,14,14);ctx.restore()}
+ for(let e of enemies){
+  if(e.telegraph>0){let p=1-e.telegraph/e.telegraphMax;ctx.globalAlpha=.22+.42*p;ctx.fillStyle=e.boss?'#ff5237':'#ff8d54';ctx.beginPath();ctx.arc(e.x,e.y,e.range+P.r+10,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle='#ffc38e';ctx.lineWidth=2+3*p;ctx.beginPath();ctx.arc(e.x,e.y,(e.range+P.r+10)*(.35+.65*p),0,Math.PI*2);ctx.stroke()}
+  ctx.fillStyle=e.boss?'#b34629':e.elite?'#a06a28':e.color;ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#181818';ctx.fillRect(e.x-23,e.y-e.r-10,46,4);ctx.fillStyle=e.boss?'#e26d3b':'#cd4754';ctx.fillRect(e.x-23,e.y-e.r-10,46*Math.max(0,e.hp/e.maxHp),4)
+ }
+ for(let f of fx){ctx.globalAlpha=Math.max(0,f.t/.32);ctx.strokeStyle='#efc970';ctx.lineWidth=3;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(1-f.t/.4),0,Math.PI*2);ctx.stroke()}ctx.globalAlpha=1;
+ if(P.class){ctx.fillStyle=CLASSES[P.class].color;ctx.beginPath();ctx.arc(P.x,P.y,P.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=P.phase>0?'#95e5ff':'#e7d7a3';ctx.lineWidth=P.phase>0?5:3;ctx.stroke()}
+ ctx.restore();
+}
+
+let last=performance.now();
+function loop(now){let dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
