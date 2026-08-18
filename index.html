@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0d1015">
-<title>Ashenfall v0.4 Beta</title>
+<title>Ashenfall v0.4.1 Beta</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:#0b0e13;color:#f2f3f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;touch-action:none}
 button{font:inherit;color:inherit}.hidden{display:none!important}
@@ -71,12 +71,26 @@ button{font:inherit;color:inherit}.hidden{display:none!important}
  .slot{min-height:76px}
 }
 
+
+#classModal{overflow:auto;padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(14px,env(safe-area-inset-bottom))}
+#classModal .panel{max-height:calc(100dvh - 28px);overflow:auto;-webkit-overflow-scrolling:touch}
+#classGrid{padding-bottom:8px}
+.class{display:flex;flex-direction:column;gap:4px;cursor:default}
+.class .selectClass{margin-top:auto;width:100%;min-height:46px;border-radius:9px;border:1px solid #9e4a54;background:#6f2f38;color:#fff;font-weight:800;font-size:13px;touch-action:manipulation}
+.class .selectClass:active{transform:scale(.985)}
+@media(max-width:720px){
+ #classModal .panel{width:calc(100vw - 20px);max-width:none;padding:12px}
+ #classGrid{grid-template-columns:1fr}
+ .class{min-height:0}
+ .class .selectClass{min-height:52px;font-size:15px}
+}
+
 </style>
 </head>
 <body>
 <div id="app">
   <div class="top">
-    <div class="brand"><b>ASHENFALL</b><small>v0.4 combat-flow beta</small></div>
+    <div class="brand"><b>ASHENFALL</b><small>v0.4.1 combat-flow beta</small></div>
     <div class="hud">
       <div class="meter">HP<div class="bar"><div id="hpBar" class="fill hp"></div></div></div>
       <div class="meter">XP<div class="bar"><div id="xpBar" class="fill xp"></div></div></div>
@@ -104,7 +118,7 @@ button{font:inherit;color:inherit}.hidden{display:none!important}
 
 <div id="classModal" class="modal">
  <div class="panel">
-  <div class="head"><div><h2>Choose your class</h2><p>Weapons and starting abilities are class-specific. The passive web is shared.</p></div></div>
+  <div class="head"><div><h2>Choose your class</h2><p>Weapons and starting abilities are class-specific. Tap the large SELECT button under a class to begin.</p></div></div>
   <div id="classGrid" class="grid2"></div>
  </div>
 </div>
@@ -137,7 +151,7 @@ button{font:inherit;color:inherit}.hidden{display:none!important}
 </div></div>
 
 <div id="helpModal" class="modal hidden"><div class="panel help">
- <div class="head"><div><h2>How this version works</h2><p>Ashenfall v0.4</p></div><button class="close" data-close="helpModal">×</button></div>
+ <div class="head"><div><h2>How this version works</h2><p>Ashenfall v0.4.1</p></div><button class="close" data-close="helpModal">×</button></div>
  <p><b>Sanctuary:</b> the green central circle is safe and rapidly heals you. Leave it when you are ready to start controlled combat waves.</p><p><b>Move:</b> left joystick. <b>Basic attack:</b> sword button. <b>Skills:</b> the three small ability buttons. Dash and Ultimate sit around them.</p>
  <p>Combat now happens outside the Sanctuary. Enemies arrive in controlled packs with recovery windows. Heavy enemies move slowly and telegraph dangerous attacks before they land.</p>
  <p>Weapons are locked to your class. Legendary and Unique items can massively alter a specific ability. Sets are deliberately short, usually 2-3 pieces, so you can mix them with ability-defining gear.</p>
@@ -488,7 +502,17 @@ function modal(id,open=true){$(id).classList.toggle('hidden',!open);if(id==='gea
 $('gearBtn').onclick=()=>modal('gearModal');$('abilityBtn').onclick=()=>modal('abilityModal');$('treeBtn').onclick=()=>modal('treeModal');$('helpBtn').onclick=()=>modal('helpModal');document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>modal(b.dataset.close,false));
 
 function renderClasses(){
- $('classGrid').innerHTML='';Object.entries(classes).forEach(([n,c])=>{let d=document.createElement('div');d.className='class';d.innerHTML=`<h3>${c.icon} ${n}</h3><small>${c.desc}</small><div class="weaps">Weapons: ${c.weapons.join(' • ')}</div><small>Core skill: ${c.abilities[0].name}</small>`;d.onclick=()=>chooseClass(n);$('classGrid').appendChild(d)})
+ $('classGrid').innerHTML='';
+ Object.entries(classes).forEach(([n,c])=>{
+   let d=document.createElement('div');
+   d.className='class';
+   d.innerHTML=`<h3>${c.icon} ${n}</h3><small>${c.desc}</small><div class="weaps">Weapons: ${c.weapons.join(' • ')}</div><small>Core skill: ${c.abilities[0].name}</small><button type="button" class="selectClass">SELECT ${n.toUpperCase()}</button>`;
+   const pick=ev=>{ev.preventDefault();ev.stopPropagation();chooseClass(n)};
+   d.querySelector('.selectClass').addEventListener('click',pick);
+   d.querySelector('.selectClass').addEventListener('touchend',pick,{passive:false});
+   d.addEventListener('dblclick',pick);
+   $('classGrid').appendChild(d);
+ })
 }
 function update(dt){
  if(!P.class)return;
